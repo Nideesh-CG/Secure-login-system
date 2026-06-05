@@ -85,7 +85,7 @@ secure-login-system/
    PORT=3000
    NODE_ENV=development
    COOKIE_SECURE=false
-   SESSION_SECRET=f3b1db88e5d0f6222bce3cd3199c0dcfd5eb77f2bcdeea7ff8cf085b1a82f3ef
+   SESSION_SECRET=**SECRET KEY**
    ```
    *(Note: Set `COOKIE_SECURE=true` in production environments when serving over HTTPS).*
 
