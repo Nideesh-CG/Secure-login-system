@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShieldGate | Secure Authentication System</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Background Canvas Grid / Gradients -->
+  <div class="bg-glow-container">
+    <div class="glow-sphere glow-sphere-1"></div>
+    <div class="glow-sphere glow-sphere-2"></div>
+  </div>
+
+  <!-- Header Nav -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🔒</span>
+      <span class="brand-name">ShieldGate</span>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="btn-icon" title="Toggle Theme">
+        <span id="themeToggleIcon">☀️</span>
+      </button>
+      <button id="headerLogoutBtn" class="btn-secondary hidden">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- 1. AUTHENTICATION SECTION (LOGIN / REGISTER / 2FA CHALLENGE) -->
+    <section id="authSection" class="auth-section">
+      <div class="auth-card">
+        
+        <!-- Tab Selector -->
+        <div class="auth-tabs" id="authTabs">
+          <button class="tab-btn active" data-target="loginFormContainer">Sign In</button>
+          <button class="tab-btn" data-target="registerFormContainer">Register</button>
+        </div>
+
+        <!-- LOGIN CONTAINER -->
+        <div id="loginFormContainer" class="auth-content">
+          <h2>Welcome Back</h2>
+          <p class="subtitle">Please sign in to access your secure account.</p>
+          
+          <form id="loginForm" autocomplete="on">
+            <div class="form-group">
+              <label for="loginUsername">Username or Email</label>
+              <input type="text" id="loginUsername" name="username" placeholder="Enter username or email" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" name="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+
+            <!-- Nested 2FA verification panel (revealed conditionally) -->
+            <div id="login2faContainer" class="form-group slide-in hidden">
+              <div class="divider">2FA Verification Needed</div>
+              <label for="login2faCode">Google Authenticator Code (or Backup Code)</label>
+              <input type="text" id="login2faCode" name="twoFactorCode" placeholder="6-digit code or backup code" pattern="[a-zA-Z0-9]{6,10}" maxlength="10" autocomplete="one-time-code">
+              <p class="input-tip">Provide your 6-digit TOTP token or a 10-character recovery code.</p>
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="btn-primary">
+              <span class="btn-text">Sign In</span>
+              <span class="btn-spinner hidden"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- REGISTRATION CONTAINER -->
+        <div id="registerFormContainer" class="auth-content hidden">
+          <h2>Create Secure Account</h2>
+          <p class="subtitle">Register to discover our state-of-the-art security features.</p>
+          
+          <form id="registerForm" autocomplete="off">
+            <div class="form-group">
+              <label for="regUsername">Username</label>
+              <input type="text" id="regUsername" name="username" placeholder="3-20 characters, alphanumeric" required autocomplete="new-username">
+              <span class="validation-msg" id="usernameValMsg"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail">Email Address</label>
+              <input type="email" id="regEmail" name="email" placeholder="you@domain.com" required autocomplete="email">
+              <span class="validation-msg" id="emailValMsg"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="regPassword">Password</label>
+              <input type="password" id="regPassword" name="password" placeholder="Choose a strong password" required autocomplete="new-password">
+              
+              <!-- Password Strength Meter -->
+              <div class="strength-meter-container">
+                <div class="strength-bars">
+                  <div class="strength-bar bar-1"></div>
+                  <div class="strength-bar bar-2"></div>
+                  <div class="strength-bar bar-3"></div>
+                  <div class="strength-bar bar-4"></div>
+                </div>
+                <div class="strength-text" id="strengthText">Complexity: Weak</div>
+              </div>
+
+              <!-- Password Rules Checklist -->
+              <ul class="password-rules">
+                <li id="ruleLength" class="invalid">At least 8 characters</li>
+                <li id="ruleUpper" class="invalid">One uppercase letter (A-Z)</li>
+                <li id="ruleLower" class="invalid">One lowercase letter (a-z)</li>
+                <li id="ruleNumber" class="invalid">One numeric digit (0-9)</li>
+                <li id="ruleSpecial" class="invalid">One special character (@$!%*?&)</li>
+              </ul>
+            </div>
+
+            <button type="submit" id="registerSubmitBtn" class="btn-primary" disabled>
+              <span class="btn-text">Register</span>
+              <span class="btn-spinner hidden"></span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. DASHBOARD SECTION (AUTHENTICATED INTERFACE) -->
+    <section id="dashboardSection" class="dashboard-section hidden">
+      
+      <!-- Welcome Panel -->
+      <div class="dashboard-banner">
+        <div class="banner-info">
+          <h1>Hello, <span id="bannerUsername">User</span>!</h1>
+          <p>Your connection is secured with custom session token layers.</p>
+        </div>
+        <div class="banner-meta">
+          <div class="meta-tag">
+            <span class="tag-dot green"></span>
+            <span class="tag-text">Account Session Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-layout">
+        
+        <!-- Left Sidebar Navigation -->
+        <nav class="dashboard-nav">
+          <button class="nav-link active" data-view="overviewTab">
+            <span class="nav-icon">📊</span> Overview
+          </button>
+          <button class="nav-link" data-view="sessionsTab">
+            <span class="nav-icon">💻</span> Active Sessions
+          </button>
+          <button class="nav-link" data-view="settingsTab">
+            <span class="nav-icon">⚙️</span> Security Settings
+          </button>
+          <button class="nav-link" data-view="logsTab">
+            <span class="nav-icon">📜</span> Security Audit Logs
+          </button>
+        </nav>
+
+        <!-- Right Side Tab Views -->
+        <div class="dashboard-views">
+          
+          <!-- OVERVIEW VIEW -->
+          <div id="overviewTab" class="view-panel active">
+            <h2>Security Scorecard</h2>
+            <p class="panel-desc">A snapshot of your account's defense properties.</p>
+            
+            <div class="security-cards-grid">
+              
+              <div class="security-card">
+                <div class="card-icon" id="status2faIcon">⚠️</div>
+                <div class="card-details">
+                  <h3>Two-Factor Authentication</h3>
+                  <p id="status2faText">Disabled (Highly Vulnerable)</p>
+                  <button class="btn-link goToSettingsBtn">Manage 2FA</button>
+                </div>
+              </div>
+
+              <div class="security-card">
+                <div class="card-icon green">🛡️</div>
+                <div class="card-details">
+                  <h3>Password Strength</h3>
+                  <p>Hashed with 12 rounds of bcrypt</p>
+                  <button class="btn-link goToSettingsBtn">Change Password</button>
+                </div>
+              </div>
+
+              <div class="security-card">
+                <div class="card-icon blue">🔑</div>
+                <div class="card-details">
+                  <h3>Active Devices</h3>
+                  <p id="statusSessionsText">Loading session details...</p>
+                  <button class="btn-link" id="goToSessionsBtn">View Active Devices</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Profile Info Box -->
+            <div class="profile-details-box">
+              <h3>Account Metadata</h3>
+              <div class="details-list">
+                <div class="details-row">
+                  <span class="details-label">Username</span>
+                  <span class="details-value" id="profileUsername">-</span>
+                </div>
+                <div class="details-row">
+                  <span class="details-label">Email Address</span>
+                  <span class="details-value" id="profileEmail">-</span>
+                </div>
+                <div class="details-row">
+                  <span class="details-label">Session ID Cookie (SHA-256 Alias)</span>
+                  <span class="details-value truncate" id="profileSessionToken">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTIVE SESSIONS VIEW -->
+          <div id="sessionsTab" class="view-panel hidden">
+            <div class="view-header">
+              <div>
+                <h2>Active Device Sessions</h2>
+                <p class="panel-desc">Manage all devices currently logged in to your account. Revoke suspicious sessions instantly.</p>
+              </div>
+              <button id="revokeAllBtn" class="btn-danger-outline hidden">Revoke Other Sessions</button>
+            </div>
+            
+            <div id="sessionsContainer" class="sessions-list">
+              <!-- Loading Skeleton -->
+              <div class="skeleton-loader">
+                <div class="skeleton-row"></div>
+                <div class="skeleton-row"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECURITY SETTINGS VIEW -->
+          <div id="settingsTab" class="view-panel hidden">
+            
+            <!-- Two Factor Auth Block -->
+            <div class="settings-block">
+              <h2>Two-Factor Authentication (2FA)</h2>
+              <p class="block-desc">Adds a secondary proof layer verification before log in approval.</p>
+
+              <!-- State: Disabled -> Toggle On -->
+              <div id="setup2faSection" class="setup-2fa-section hidden">
+                <div class="setup-2fa-steps">
+                  <div class="step-card">
+                    <h4>Step 1: Scan QR Code</h4>
+                    <p>Scan this QR code using Google Authenticator, Authy, or Microsoft Authenticator.</p>
+                    <div class="qr-container">
+                      <img id="qrCodeImg" src="" alt="2FA QR Code">
+                    </div>
+                    <div class="manual-secret">
+                      <span>Or enter manually:</span>
+                      <code id="manualSecretKey">LOADING</code>
+                    </div>
+                  </div>
+                  
+                  <div class="step-card">
+                    <h4>Step 2: Enter Verification Code</h4>
+                    <p>Enter the 6-digit verification code from your authenticator app to enable 2FA.</p>
+                    <form id="enable2faForm">
+                      <div class="form-group inline-group">
+                        <input type="text" id="confirm2faCode" placeholder="e.g. 123456" pattern="\d{6}" maxlength="6" required autocomplete="one-time-code">
+                        <button type="submit" class="btn-primary">Verify & Enable</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- State: Backup Codes Screen -->
+              <div id="backupCodesSection" class="backup-codes-section hidden">
+                <div class="alert-box success">
+                  <h4>🔒 2FA Enabled Successfully!</h4>
+                  <p>Save these backup recovery codes immediately. Each code can only be used once if you lose access to your device.</p>
+                </div>
+                <div class="backup-codes-grid" id="backupCodesGrid">
+                  <!-- JS populated -->
+                </div>
+                <button id="closeBackupBtn" class="btn-primary">I have saved these codes</button>
+              </div>
+
+              <!-- State: Enabled -> Toggle Off -->
+              <div id="active2faSection" class="active-2fa-section hidden">
+                <div class="active-2fa-banner">
+                  <span class="active-icon">🔒</span>
+                  <div>
+                    <h4>Two-Factor Authentication is Active</h4>
+                    <p>Your account is protected by your authenticator app verification.</p>
+                  </div>
+                </div>
+                <button id="disable2faBtn" class="btn-danger">Disable 2FA</button>
+              </div>
+
+              <div id="initiate2faSection" class="initiate-2fa-section">
+                <button id="start2faSetupBtn" class="btn-primary">Enable 2FA Protection</button>
+              </div>
+            </div>
+
+            <!-- Change Password Block -->
+            <div class="settings-block">
+              <h2>Change Password</h2>
+              <p class="block-desc">Update your password security. This will sign out all other devices immediately.</p>
+              
+              <form id="changePasswordForm">
+                <div class="form-group">
+                  <label for="currentPassword">Current Password</label>
+                  <input type="password" id="currentPassword" required autocomplete="current-password">
+                </div>
+
+                <div class="form-group">
+                  <label for="newPassword">New Password</label>
+                  <input type="password" id="newPassword" required autocomplete="new-password">
+                  
+                  <div class="strength-meter-container">
+                    <div class="strength-bars">
+                      <div class="strength-bar change-bar-1"></div>
+                      <div class="strength-bar change-bar-2"></div>
+                      <div class="strength-bar change-bar-3"></div>
+                      <div class="strength-bar change-bar-4"></div>
+                    </div>
+                    <div class="strength-text" id="changeStrengthText">Complexity: Weak</div>
+                  </div>
+                </div>
+
+                <button type="submit" id="changePasswordBtn" class="btn-secondary" disabled>Update Password</button>
+              </form>
+            </div>
+
+          </div>
+
+          <!-- SECURITY LOGS VIEW -->
+          <div id="logsTab" class="view-panel hidden">
+            <h2>Security Audit Logs</h2>
+            <p class="panel-desc">Real-time log of security actions linked to your user account.</p>
+            
+            <div class="logs-table-container">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th>Event Type</th>
+                    <th>IP Address</th>
+                    <th>User Agent</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    <p>ShieldGate &copy; 2026. Built with Vanilla Web Tech and sqlite Prepared Statements.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
